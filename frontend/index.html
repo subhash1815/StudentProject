@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Daily Habit Tracker</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Work+Sans:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="hero">
+        <p class="eyebrow">Daily Habit Tracker</p>
+        <h1>Build consistent routines one day at a time.</h1>
+        <p class="hero-copy">
+          Add habits, mark them done for today, and track your current streak.
+        </p>
+      </section>
+
+      <section class="panel">
+        <form id="habit-form" class="habit-form">
+          <label class="sr-only" for="habit-name">Habit name</label>
+          <input
+            id="habit-name"
+            name="habitName"
+            type="text"
+            placeholder="Enter a habit like Reading"
+            maxlength="80"
+            required
+          />
+          <button type="submit">Add Habit</button>
+        </form>
+
+        <div class="toolbar">
+          <p id="status-message" class="status-message">Loading habits...</p>
+          <button id="refresh-button" class="secondary-button" type="button">
+            Refresh
+          </button>
+        </div>
+
+        <section class="summary-grid" aria-label="Habit summary">
+          <article class="summary-card">
+            <span>Total Habits</span>
+            <strong id="total-count">0</strong>
+          </article>
+          <article class="summary-card">
+            <span>Completed Today</span>
+            <strong id="completed-count">0</strong>
+          </article>
+          <article class="summary-card">
+            <span>Longest Streak</span>
+            <strong id="best-streak">0</strong>
+          </article>
+        </section>
+
+        <section>
+          <ul id="habit-list" class="habit-list" aria-live="polite"></ul>
+        </section>
+      </section>
+    </main>
+
+    <template id="habit-item-template">
+      <li class="habit-card">
+        <div class="habit-info">
+          <h2 class="habit-name"></h2>
+          <p class="habit-meta"></p>
+        </div>
+        <div class="habit-actions">
+          <button class="toggle-button" type="button"></button>
+          <button class="delete-button" type="button">Delete</button>
+        </div>
+      </li>
+    </template>
+
+    <script src="./config.js"></script>
+    <script src="./app.js"></script>
+  </body>
+</html>
+
