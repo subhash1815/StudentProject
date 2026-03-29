@@ -64,7 +64,7 @@ function createHabitCard(habit) {
   toggleButton.addEventListener("click", async () => {
     try {
       statusMessage.textContent = `Updating "${habit.name}"...`;
-      await apiRequest(`/habits/${habit._id}`, {
+      await apiRequest(`/habits/${habit.id}`, {
         method: "PUT",
         body: JSON.stringify({ completed: !habit.completed }),
       });
@@ -77,7 +77,7 @@ function createHabitCard(habit) {
   deleteButton.addEventListener("click", async () => {
     try {
       statusMessage.textContent = `Deleting "${habit.name}"...`;
-      await apiRequest(`/habits/${habit._id}`, {
+      await apiRequest(`/habits/${habit.id}`, {
         method: "DELETE",
       });
       await loadHabits("Habit deleted.");
@@ -143,4 +143,3 @@ refreshButton.addEventListener("click", () => {
 });
 
 loadHabits();
-
