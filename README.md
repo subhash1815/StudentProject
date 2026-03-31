@@ -85,17 +85,30 @@ That creates:
 
 ### 2. Create environment variables
 
-Copy `backend/.env.example` to `backend/.env` and update the password if needed:
+Copy `backend/.env.example` to `backend/.env` and fill in your MySQL credentials exactly as configured:
+
+```bash
+cd backend
+cp .env.example .env
+```
+
+Then edit `backend/.env`:
 
 ```env
 PORT=5000
 DB_HOST=127.0.0.1
 DB_PORT=3306
 DB_USER=root
-DB_PASSWORD=your_mysql_password
+DB_PASSWORD=YOUR_ROOT_PASSWORD_HERE
 DB_NAME=daily_habit_tracker
-CLIENT_URL=http://127.0.0.1:5500
+CLIENT_URL=http://localhost:3000
+JWT_SECRET=your-strong-secret
 ```
+
+If root has no password on your machine, set `DB_PASSWORD=` (empty). If there is a password, set it accordingly.
+
+> Important: `Failed to start server: Access denied for user 'root'@'localhost'` means MySQL auth is not matching `.env`.
+
 
 ## Local development
 
@@ -116,15 +129,16 @@ The API will run at `http://localhost:5000`.
 
 ### 3. Start the frontend
 
-Use VS Code Live Server or any static server to open [frontend/index.html](/home/knightx/StudentProject/frontend/index.html).
+Install frontend dependencies and run Vite:
 
-The frontend already points to:
-
-```javascript
-window.APP_CONFIG = {
-  API_BASE_URL: "http://localhost:5000/api",
-};
+```bash
+cd frontend
+npm install
+npm run dev
 ```
+
+Open `http://localhost:3000` for React app. The frontend uses `http://localhost:5000/api` by default through `VITE_API_BASE_URL`.
+
 
 ## Database table
 

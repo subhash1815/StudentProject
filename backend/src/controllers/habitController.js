@@ -1,9 +1,31 @@
+const jwt = require("jsonwebtoken");
 const { getDatabase } = require("../config/db");
 const { applyDailyReset, calculateUpdatedStreak } = require("../utils/habitHelpers");
+
+const JWT_SECRET = process.env.JWT_SECRET || "dev-secret";
+
+function getUserIdFromToken(request) {
+  const authHeader = request.headers.authorization;
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return null;
+  }
+  const token = authHeader.split(" ")[1];
+  try {
+    const payload = jwt.verify(token, JWT_SECRET);
+    return payload.userId;
+  } catch {
+    return null;
+  }
+}
 
 async function getHabits(request, response, next) {
   try {
     const database = getDatabase();
+    const userId = getUserIdFromToken(request);
+    if (!userId) {
+      return response.status(401).json({ message: "Unauthorized." });
+    }
+
     const [rows] = await database.query(
       `SELECT
         id,
@@ -13,7 +35,9 @@ async function getHabits(request, response, next) {
         last_completed_date AS lastCompletedDate,
         created_at AS createdAt
       FROM habits
-      ORDER BY created_at DESC`
+      WHERE user_id = ?
+      ORDER BY created_at DESC`,
+      [userId]
     );
 
     const updatedHabits = await Promise.all(
@@ -53,7 +77,13 @@ async function createHabit(request, response, next) {
       });
     }
 
-    const [result] = await database.query("INSERT INTO habits (name) VALUES (?)", [
+    const userId = getUserIdFromToken(request);
+    if (!userId) {
+      return response.status(401).json({ message: "Unauthorized." });
+    }
+
+    const [result] = await database.query("INSERT INTO habits (user_id, name) VALUES (?, ?)", [
+      userId,
       name.trim(),
     ]);
 
@@ -66,8 +96,8 @@ async function createHabit(request, response, next) {
         last_completed_date AS lastCompletedDate,
         created_at AS createdAt
       FROM habits
-      WHERE id = ?`,
-      [result.insertId]
+      WHERE id = ? AND user_id = ?`,
+      [result.insertId, userId]
     );
 
     response.status(201).json({
@@ -83,6 +113,11 @@ async function updateHabit(request, response, next) {
   try {
     const { completed } = request.body;
     const database = getDatabase();
+    const userId = getUserIdFromToken(request);
+    if (!userId) {
+      return response.status(401).json({ message: "Unauthorized." });
+    }
+
     const [rows] = await database.query(
       `SELECT
         id,
@@ -92,8 +127,8 @@ async function updateHabit(request, response, next) {
         last_completed_date AS lastCompletedDate,
         created_at AS createdAt
       FROM habits
-      WHERE id = ?`,
-      [request.params.id]
+      WHERE id = ? AND user_id = ?`,
+      [request.params.id, userId]
     );
 
     if (rows.length === 0) {
@@ -129,8 +164,14 @@ async function updateHabit(request, response, next) {
 async function deleteHabit(request, response, next) {
   try {
     const database = getDatabase();
-    const [result] = await database.query("DELETE FROM habits WHERE id = ?", [
+    const userId = getUserIdFromToken(request);
+    if (!userId) {
+      return response.status(401).json({ message: "Unauthorized." });
+    }
+
+    const [result] = await database.query("DELETE FROM habits WHERE id = ? AND user_id = ?", [
       request.params.id,
+      userId,
     ]);
 
     if (result.affectedRows === 0) {

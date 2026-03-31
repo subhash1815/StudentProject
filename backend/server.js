@@ -4,6 +4,7 @@ const dotenv = require("dotenv");
 
 const { initializeDatabase } = require("./src/config/db");
 const habitRoutes = require("./src/routes/habitRoutes");
+const authRoutes = require("./src/routes/authRoutes");
 
 dotenv.config();
 
@@ -37,6 +38,7 @@ app.get("/", (request, response) => {
   });
 });
 
+app.use("/api/auth", authRoutes);
 app.use("/api/habits", habitRoutes);
 
 app.use((error, request, response, next) => {
