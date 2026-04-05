@@ -70,6 +70,36 @@ Deletes a habit.
 
 This project now uses MySQL for local development.
 
+### Option A: Run MySQL with Docker
+
+Use Docker Compose from the project root:
+
+```bash
+docker compose up -d
+```
+
+This pulls the official `mysql:8.4` image, starts a local database on `127.0.0.1:3306`, and initializes the schema automatically from [backend/src/database/schema.sql](/home/knightx/StudentProject/backend/src/database/schema.sql).
+
+The default container credentials match [backend/.env.example](/home/knightx/StudentProject/backend/.env.example):
+
+- `DB_HOST=127.0.0.1`
+- `DB_PORT=3306`
+- `DB_USER=student`
+- `DB_PASSWORD=1234`
+- `DB_NAME=daily_habit_tracker`
+
+To stop it:
+
+```bash
+docker compose down
+```
+
+To stop it and remove the saved database volume:
+
+```bash
+docker compose down -v
+```
+
 ### 1. Create the database
 
 Run the SQL file in [backend/src/database/schema.sql](/home/knightx/StudentProject/backend/src/database/schema.sql):
@@ -206,13 +236,28 @@ git push -u origin main
 
 ## Deployment notes
 
-For deployment, use a hosted MySQL provider or Render/Railway MySQL-compatible database and set:
+For deployment, use a hosted MySQL provider or Render/Railway MySQL-compatible database.
+
+Set either a full connection string:
+
+- `DATABASE_URL`
+
+Or set the individual variables:
 
 - `DB_HOST`
 - `DB_PORT`
 - `DB_USER`
 - `DB_PASSWORD`
 - `DB_NAME`
+
+If your provider requires TLS, also set:
+
+- `DB_SSL=true`
+
+Also set:
+
 - `CLIENT_URL`
+
+Important: do not leave `DB_HOST=127.0.0.1` in Render unless MySQL is running in the same container, which it is not. A Render web service cannot connect to your laptop's local MySQL server.
 
 After deploying the backend, update [frontend/config.js](/home/knightx/StudentProject/frontend/config.js) with the live backend URL.

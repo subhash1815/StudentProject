@@ -2,8 +2,43 @@ const mysql = require("mysql2/promise");
 
 let pool;
 
-async function initializeDatabase() {
-  pool = mysql.createPool({
+function getSslConfig() {
+  if (process.env.DB_SSL === "true") {
+    return { rejectUnauthorized: false };
+  }
+
+  return undefined;
+}
+
+function getConnectionConfig() {
+  const databaseUrl = process.env.DATABASE_URL || process.env.MYSQL_URL;
+  const isProduction = process.env.NODE_ENV === "production";
+
+  if (databaseUrl) {
+    const parsedUrl = new URL(databaseUrl);
+
+    return {
+      host: parsedUrl.hostname,
+      port: Number(parsedUrl.port || 3306),
+      user: decodeURIComponent(parsedUrl.username),
+      password: decodeURIComponent(parsedUrl.password),
+      database: parsedUrl.pathname.replace(/^\//, ""),
+      waitForConnections: true,
+      connectionLimit: 10,
+      ssl: getSslConfig(),
+    };
+  }
+
+  const requiredKeys = ["DB_HOST", "DB_PORT", "DB_USER", "DB_NAME"];
+  const missingKeys = requiredKeys.filter((key) => !process.env[key]);
+
+  if (isProduction && missingKeys.length > 0) {
+    throw new Error(
+      `Missing database environment variables in production: ${missingKeys.join(", ")}`
+    );
+  }
+
+  return {
     host: process.env.DB_HOST || "127.0.0.1",
     port: Number(process.env.DB_PORT || 3306),
     user: process.env.DB_USER || "root",
@@ -11,7 +46,12 @@ async function initializeDatabase() {
     database: process.env.DB_NAME || "daily_habit_tracker",
     waitForConnections: true,
     connectionLimit: 10,
-  });
+    ssl: getSslConfig(),
+  };
+}
+
+async function initializeDatabase() {
+  pool = mysql.createPool(getConnectionConfig());
 
   await pool.query(`
     CREATE TABLE IF NOT EXISTS users (
