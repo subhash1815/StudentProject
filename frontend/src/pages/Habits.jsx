@@ -70,8 +70,13 @@ function HabitsPage() {
   const bestStreak = habits.reduce((max, h) => Math.max(max, h.streak || 0), 0);
 
   return (
-    <section className="panel">
-      <h2>My Habits</h2>
+    <section className="panel page-enter">
+      <div className="panel-header">
+        <div>
+          <h2>All Habits</h2>
+          <p className="muted">Build steady routines and keep your streaks visible day by day.</p>
+        </div>
+      </div>
 
       <form onSubmit={handleAdd} className="habit-form">
         <input
@@ -81,35 +86,75 @@ function HabitsPage() {
           required
           maxLength="80"
         />
-        <button type="submit">Add</button>
+        <button type="submit" className="primary-button">Add Habit</button>
       </form>
 
       <div className="summary-grid">
-        <div>Total: {habits.length}</div>
-        <div>Completed: {completedCount}</div>
-        <div>Best Streak: {bestStreak}</div>
+        <div><span>Total</span><strong>{habits.length}</strong></div>
+        <div><span>Completed</span><strong>{completedCount}</strong></div>
+        <div><span>Best Streak</span><strong>{bestStreak}</strong></div>
       </div>
 
       {status && <p className="status-message">{status}</p>}
       {error && <p className="error-msg">{error}</p>}
 
       {loading ? (
-        <p>Loading...</p>
+        <div className="loading-state" aria-live="polite">
+          <div className="loading-card">
+            <span className="loading-dot" />
+            <div className="loading-lines">
+              <span />
+              <span />
+            </div>
+          </div>
+          <div className="loading-card">
+            <span className="loading-dot alternate" />
+            <div className="loading-lines">
+              <span />
+              <span />
+            </div>
+          </div>
+          <p>Loading your habit journal...</p>
+        </div>
       ) : habits.length === 0 ? (
-        <p>No habits yet. Add one now.</p>
+        <div className="empty-state">
+          <div className="empty-illustration">
+            <div className="loading-card">
+              <span className="loading-dot" />
+              <div className="loading-lines">
+                <span />
+                <span />
+              </div>
+            </div>
+            <div className="loading-card">
+              <span className="loading-dot alternate" />
+              <div className="loading-lines">
+                <span />
+                <span />
+              </div>
+            </div>
+          </div>
+          <h3>Welcome to Journal</h3>
+          <p>Journal makes your habit progress visible day by day. Start with a single habit.</p>
+          <div className="empty-actions">
+            <button type="button" className="primary-button" onClick={() => document.querySelector(".habit-form input")?.focus()}>
+              Build new Habit
+            </button>
+          </div>
+        </div>
       ) : (
         <ul className="habit-list">
           {habits.map((habit) => (
             <li key={habit.id} className={`habit-card ${habit.completed ? "completed" : ""}`}>
-              <div>
+              <div className="habit-meta">
                 <strong>{habit.name}</strong>
                 <p>Streak: {habit.streak || 0}</p>
               </div>
               <div className="actions">
-                <button onClick={() => handleToggle(habit.id, habit.completed)}>
+                <button className="ghost-button" onClick={() => handleToggle(habit.id, habit.completed)}>
                   {habit.completed ? "Unmark" : "Mark Done"}
                 </button>
-                <button onClick={() => handleDelete(habit.id)}>Delete</button>
+                <button className="danger-button" onClick={() => handleDelete(habit.id)}>Delete</button>
               </div>
             </li>
           ))}

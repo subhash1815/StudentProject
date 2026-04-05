@@ -27,8 +27,10 @@ function LoginPage() {
   };
 
   return (
-    <section className="auth-panel">
-      <h2>Login</h2>
+    <section className="auth-panel page-enter">
+      <p className="eyebrow">Welcome back</p>
+      <h2>Enter your journal</h2>
+      <p className="muted">Track your routines in a focused dark workspace.</p>
       <form onSubmit={submit}>
         <label>
           Email
@@ -40,7 +42,7 @@ function LoginPage() {
           <input value={password} onChange={(e) => setPassword(e.target.value)} type="password" required />
         </label>
 
-        <button type="submit" disabled={loading}>{loading ? "Signing in..." : "Login"}</button>
+        <button className="primary-button" type="submit" disabled={loading}>{loading ? "Signing in..." : "Login"}</button>
         {error && <div className="error-msg">{error}</div>}
       </form>
       <p>

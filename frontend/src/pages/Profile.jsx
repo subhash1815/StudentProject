@@ -26,7 +26,20 @@ function ProfilePage() {
   }, []);
 
   if (loading) {
-    return <div className="panel">Loading profile...</div>;
+    return (
+      <div className="panel page-enter">
+        <div className="loading-state" aria-live="polite">
+          <div className="loading-card">
+            <span className="loading-dot" />
+            <div className="loading-lines">
+              <span />
+              <span />
+            </div>
+          </div>
+          <p>Loading profile...</p>
+        </div>
+      </div>
+    );
   }
 
   if (error) {
@@ -62,8 +75,13 @@ function ProfilePage() {
   };
 
   return (
-    <section className="panel">
-      <h2>My Profile</h2>
+    <section className="panel page-enter">
+      <div className="panel-header">
+        <div>
+          <h2>My Profile</h2>
+          <p className="muted">Keep your account details and journal access in sync.</p>
+        </div>
+      </div>
       <div className="profile-summary">
         <p>
           <strong>Name:</strong> {profile.name}
@@ -88,7 +106,7 @@ function ProfilePage() {
             placeholder="Password"
           />
         </label>
-        <button onClick={handleDelete} style={{ background: "#cc4b37", color: "white" }} disabled={loading}>
+        <button className="danger-button" onClick={handleDelete} disabled={loading}>
           {loading ? "Deleting…" : "Delete account"}
         </button>
       </div>

@@ -28,8 +28,10 @@ function RegisterPage() {
   };
 
   return (
-    <section className="auth-panel">
-      <h2>Create Account</h2>
+    <section className="auth-panel page-enter">
+      <p className="eyebrow">Start fresh</p>
+      <h2>Create your account</h2>
+      <p className="muted">Set up your habit journal and keep your progress in one place.</p>
       <form onSubmit={submit}>
         <label>
           Full Name
@@ -46,7 +48,7 @@ function RegisterPage() {
           <input value={password} onChange={(e) => setPassword(e.target.value)} type="password" minLength={6} required />
         </label>
 
-        <button type="submit" disabled={loading}>{loading ? "Creating account..." : "Register"}</button>
+        <button className="primary-button" type="submit" disabled={loading}>{loading ? "Creating account..." : "Register"}</button>
         {error && <div className="error-msg">{error}</div>}
       </form>
       <p>
