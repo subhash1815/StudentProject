@@ -1,6 +1,6 @@
 # Daily Habit Tracker
 
-A beginner-friendly full-stack web app for adding habits, marking them complete for the day, tracking streaks, and storing data in a local MySQL database.
+A beginner-friendly full-stack web app for adding habits, marking them complete for the day, tracking streaks, and storing data in PostgreSQL.
 
 ## Folder structure
 
@@ -36,7 +36,7 @@ daily-habit-tracker/
 - View all habits
 - Mark a habit as completed for today
 - Delete a habit
-- Store data in MySQL
+- Store data in PostgreSQL
 - Daily reset for the completed flag
 - Streak tracking
 
@@ -66,11 +66,11 @@ Updates the completion status.
 ### `DELETE /api/habits/:id`
 Deletes a habit.
 
-## Local MySQL setup
+## Local PostgreSQL setup
 
-This project now uses MySQL for local development.
+This project now uses PostgreSQL for local development and Render deployment.
 
-### Option A: Run MySQL with Docker
+### Option A: Run PostgreSQL with Docker
 
 Use Docker Compose from the project root:
 
@@ -78,14 +78,14 @@ Use Docker Compose from the project root:
 docker compose up -d
 ```
 
-This pulls the official `mysql:8.4` image, starts a local database on `127.0.0.1:3306`, and initializes the schema automatically from [backend/src/database/schema.sql](/home/knightx/StudentProject/backend/src/database/schema.sql).
+This pulls the official `postgres:16` image, starts a local database on `127.0.0.1:5432`, and initializes the schema automatically from [backend/src/database/schema.sql](/home/knightx/StudentProject/backend/src/database/schema.sql).
 
 The default container credentials match [backend/.env.example](/home/knightx/StudentProject/backend/.env.example):
 
 - `DB_HOST=127.0.0.1`
-- `DB_PORT=3306`
-- `DB_USER=student`
-- `DB_PASSWORD=1234`
+- `DB_PORT=5432`
+- `DB_USER=postgres`
+- `DB_PASSWORD=postgres`
 - `DB_NAME=daily_habit_tracker`
 
 To stop it:
@@ -105,17 +105,17 @@ docker compose down -v
 Run the SQL file in [backend/src/database/schema.sql](/home/knightx/StudentProject/backend/src/database/schema.sql):
 
 ```bash
-mysql -u root -p < backend/src/database/schema.sql
+createdb -U postgres daily_habit_tracker
+psql -U postgres -d daily_habit_tracker -f backend/src/database/schema.sql
 ```
 
 That creates:
 
-- Database: `daily_habit_tracker`
-- Table: `habits`
+- Tables: `users`, `habits`
 
 ### 2. Create environment variables
 
-Copy `backend/.env.example` to `backend/.env` and fill in your MySQL credentials exactly as configured:
+Copy `backend/.env.example` to `backend/.env` and fill in your PostgreSQL credentials exactly as configured:
 
 ```bash
 cd backend
@@ -127,17 +127,15 @@ Then edit `backend/.env`:
 ```env
 PORT=5000
 DB_HOST=127.0.0.1
-DB_PORT=3306
-DB_USER=root
-DB_PASSWORD=YOUR_ROOT_PASSWORD_HERE
+DB_PORT=5432
+DB_USER=postgres
+DB_PASSWORD=postgres
 DB_NAME=daily_habit_tracker
 CLIENT_URL=http://localhost:3000
 JWT_SECRET=your-strong-secret
 ```
 
-If root has no password on your machine, set `DB_PASSWORD=` (empty). If there is a password, set it accordingly.
-
-> Important: `Failed to start server: Access denied for user 'root'@'localhost'` means MySQL auth is not matching `.env`.
+> Important: local authentication errors usually mean your PostgreSQL username, password, or database name do not match `.env`.
 
 
 ## Local development
@@ -194,7 +192,7 @@ git add frontend
 git commit -m "Create frontend for habit tracker"
 
 git add backend
-git commit -m "Create backend API and MySQL integration"
+git commit -m "Create backend API and PostgreSQL integration"
 ```
 
 Push to GitHub:
@@ -236,28 +234,16 @@ git push -u origin main
 
 ## Deployment notes
 
-For deployment, use a hosted MySQL provider or Render/Railway MySQL-compatible database.
-
-Set either a full connection string:
+For deployment on Render, create a managed PostgreSQL database and set:
 
 - `DATABASE_URL`
-
-Or set the individual variables:
-
-- `DB_HOST`
-- `DB_PORT`
-- `DB_USER`
-- `DB_PASSWORD`
-- `DB_NAME`
+- `CLIENT_URL`
+- `JWT_SECRET`
 
 If your provider requires TLS, also set:
 
 - `DB_SSL=true`
 
-Also set:
-
-- `CLIENT_URL`
-
-Important: do not leave `DB_HOST=127.0.0.1` in Render unless MySQL is running in the same container, which it is not. A Render web service cannot connect to your laptop's local MySQL server.
+Render Postgres typically provides a `postgresql://...` connection string directly.
 
 After deploying the backend, update [frontend/config.js](/home/knightx/StudentProject/frontend/config.js) with the live backend URL.

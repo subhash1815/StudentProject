@@ -26,22 +26,22 @@ async function getHabits(request, response, next) {
       return response.status(401).json({ message: "Unauthorized." });
     }
 
-    const [rows] = await database.query(
+    const result = await database.query(
       `SELECT
         id,
         name,
         completed,
         streak,
-        last_completed_date AS lastCompletedDate,
-        created_at AS createdAt
+        last_completed_date AS "lastCompletedDate",
+        created_at AS "createdAt"
       FROM habits
-      WHERE user_id = ?
+      WHERE user_id = $1
       ORDER BY created_at DESC`,
       [userId]
     );
 
     const updatedHabits = await Promise.all(
-      rows.map(async (habit) => {
+      result.rows.map(async (habit) => {
         const normalizedHabit = {
           ...habit,
           completed: Boolean(habit.completed),
@@ -50,7 +50,7 @@ async function getHabits(request, response, next) {
         applyDailyReset(normalizedHabit);
 
         if (normalizedHabit.completed !== originalCompleted) {
-          await database.query("UPDATE habits SET completed = ? WHERE id = ?", [
+          await database.query("UPDATE habits SET completed = $1 WHERE id = $2", [
             normalizedHabit.completed,
             normalizedHabit.id,
           ]);
@@ -82,27 +82,28 @@ async function createHabit(request, response, next) {
       return response.status(401).json({ message: "Unauthorized." });
     }
 
-    const [result] = await database.query("INSERT INTO habits (user_id, name) VALUES (?, ?)", [
-      userId,
-      name.trim(),
-    ]);
+    const result = await database.query(
+      "INSERT INTO habits (user_id, name) VALUES ($1, $2) RETURNING id",
+      [userId, name.trim()]
+    );
+    const habitId = result.rows[0].id;
 
-    const [rows] = await database.query(
+    const rows = await database.query(
       `SELECT
         id,
         name,
         completed,
         streak,
-        last_completed_date AS lastCompletedDate,
-        created_at AS createdAt
+        last_completed_date AS "lastCompletedDate",
+        created_at AS "createdAt"
       FROM habits
-      WHERE id = ? AND user_id = ?`,
-      [result.insertId, userId]
+      WHERE id = $1 AND user_id = $2`,
+      [habitId, userId]
     );
 
     response.status(201).json({
-      ...rows[0],
-      completed: Boolean(rows[0].completed),
+      ...rows.rows[0],
+      completed: Boolean(rows.rows[0].completed),
     });
   } catch (error) {
     next(error);
@@ -118,35 +119,35 @@ async function updateHabit(request, response, next) {
       return response.status(401).json({ message: "Unauthorized." });
     }
 
-    const [rows] = await database.query(
+    const rows = await database.query(
       `SELECT
         id,
         name,
         completed,
         streak,
-        last_completed_date AS lastCompletedDate,
-        created_at AS createdAt
+        last_completed_date AS "lastCompletedDate",
+        created_at AS "createdAt"
       FROM habits
-      WHERE id = ? AND user_id = ?`,
+      WHERE id = $1 AND user_id = $2`,
       [request.params.id, userId]
     );
 
-    if (rows.length === 0) {
+    if (rows.rows.length === 0) {
       return response.status(404).json({
         message: "Habit not found.",
       });
     }
 
     const habit = {
-      ...rows[0],
-      completed: Boolean(rows[0].completed),
+      ...rows.rows[0],
+      completed: Boolean(rows.rows[0].completed),
     };
     const updates = calculateUpdatedStreak(habit, completed);
 
     await database.query(
       `UPDATE habits
-      SET completed = ?, last_completed_date = ?, streak = ?
-      WHERE id = ?`,
+      SET completed = $1, last_completed_date = $2, streak = $3
+      WHERE id = $4`,
       [updates.completed, updates.lastCompletedDate, updates.streak, request.params.id]
     );
 
@@ -169,12 +170,12 @@ async function deleteHabit(request, response, next) {
       return response.status(401).json({ message: "Unauthorized." });
     }
 
-    const [result] = await database.query("DELETE FROM habits WHERE id = ? AND user_id = ?", [
+    const result = await database.query("DELETE FROM habits WHERE id = $1 AND user_id = $2", [
       request.params.id,
       userId,
     ]);
 
-    if (result.affectedRows === 0) {
+    if (result.rowCount === 0) {
       return response.status(404).json({
         message: "Habit not found.",
       });

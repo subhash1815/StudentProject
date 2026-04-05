@@ -14,26 +14,27 @@ async function registerUser(request, response, next) {
 
     const database = getDatabase();
 
-    const [existing] = await database.query("SELECT id FROM users WHERE email = ?", [
+    const existing = await database.query("SELECT id FROM users WHERE email = $1", [
       email.trim().toLowerCase(),
     ]);
 
-    if (existing.length) {
+    if (existing.rows.length) {
       return response.status(409).json({ message: "Email already registered." });
     }
 
     const passwordHash = await bcrypt.hash(password, 12);
-    const [insertResult] = await database.query(
-      "INSERT INTO users (name, email, password_hash) VALUES (?, ?, ?)",
+    const insertResult = await database.query(
+      "INSERT INTO users (name, email, password_hash) VALUES ($1, $2, $3) RETURNING id",
       [name.trim(), email.trim().toLowerCase(), passwordHash]
     );
+    const userId = insertResult.rows[0].id;
 
-    const token = jwt.sign({ userId: insertResult.insertId }, JWT_SECRET, {
+    const token = jwt.sign({ userId }, JWT_SECRET, {
       expiresIn: JWT_EXPIRATION,
     });
 
     response.status(201).json({
-      id: insertResult.insertId,
+      id: userId,
       name: name.trim(),
       email: email.trim().toLowerCase(),
       token,
@@ -51,15 +52,15 @@ async function loginUser(request, response, next) {
     }
 
     const database = getDatabase();
-    const [rows] = await database.query("SELECT id, name, email, password_hash FROM users WHERE email = ?", [
+    const rows = await database.query("SELECT id, name, email, password_hash FROM users WHERE email = $1", [
       email.trim().toLowerCase(),
     ]);
 
-    if (rows.length === 0) {
+    if (rows.rows.length === 0) {
       return response.status(401).json({ message: "Invalid credentials." });
     }
 
-    const user = rows[0];
+    const user = rows.rows[0];
     const isMatch = await bcrypt.compare(password, user.password_hash);
 
     if (!isMatch) {
@@ -105,16 +106,16 @@ async function getProfile(request, response, next) {
     }
 
     const database = getDatabase();
-    const [rows] = await database.query(
-      "SELECT id, name, email, created_at AS createdAt FROM users WHERE id = ?",
+    const rows = await database.query(
+      "SELECT id, name, email, created_at AS \"createdAt\" FROM users WHERE id = $1",
       [userId]
     );
 
-    if (rows.length === 0) {
+    if (rows.rows.length === 0) {
       return response.status(404).json({ message: "User not found." });
     }
 
-    response.json(rows[0]);
+    response.json(rows.rows[0]);
   } catch (error) {
     next(error);
   }
@@ -133,19 +134,19 @@ async function deleteAccount(request, response, next) {
     }
 
     const database = getDatabase();
-    const [rows] = await database.query("SELECT password_hash FROM users WHERE id = ?", [userId]);
+    const rows = await database.query("SELECT password_hash FROM users WHERE id = $1", [userId]);
 
-    if (rows.length === 0) {
+    if (rows.rows.length === 0) {
       return response.status(404).json({ message: "User not found." });
     }
 
-    const user = rows[0];
+    const user = rows.rows[0];
     const isMatch = await bcrypt.compare(password, user.password_hash);
     if (!isMatch) {
       return response.status(401).json({ message: "Invalid password." });
     }
 
-    await database.query("DELETE FROM users WHERE id = ?", [userId]);
+    await database.query("DELETE FROM users WHERE id = $1", [userId]);
 
     response.json({ message: "Account deleted successfully." });
   } catch (error) {

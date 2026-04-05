@@ -1,23 +1,22 @@
 services:
-  mysql:
-    image: mysql:8.4
-    container_name: daily-habit-tracker-mysql
+  postgres:
+    image: postgres:16
+    container_name: daily-habit-tracker-postgres
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: rootpassword
-      MYSQL_DATABASE: daily_habit_tracker
-      MYSQL_USER: student
-      MYSQL_PASSWORD: 1234
+      POSTGRES_DB: daily_habit_tracker
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
     ports:
-      - "3306:3306"
+      - "5432:5432"
     volumes:
-      - mysql_data:/var/lib/mysql
+      - postgres_data:/var/lib/postgresql/data
       - ./backend/src/database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-prootpassword"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d daily_habit_tracker"]
       interval: 10s
       timeout: 5s
       retries: 10
 
 volumes:
-  mysql_data:
+  postgres_data:
